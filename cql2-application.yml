@@ -1,0 +1,63 @@
+import re
+
+import requests as rq
+
+import openpyxl as excel
+
+from selenium import webdriver as se
+
+url = "https://uland.taobao.com/sem/tbsearch?keyword=%E6%B7%98%E5%AE%9D%E5%AE%9D%E8%B4%9D&refpid" \
+      "=mm_26632258_3504122_32538762&clk1=248267d4a23088999b020a11a910b219&upsId=248267d4a23088999b020a11a910b219 "
+
+ht = rq.get(url)
+
+ht.encoding = ht.apparent_encoding
+
+print(ht.text)
+
+mas = re.compile(r'https?://\S+', re.IGNORECASE)
+
+url = mas.findall(ht.text)
+
+print(url)
+
+ch = se.Chrome("C://Users//Administrator//Downloads//chromedriver_win32//chromedriver.exe")
+ch.get("https://uland.taobao.com/sem/tbsearch?keyword=%E6%B7%98%E5%AE%9D%E5%AE%9D%E8%B4%9D&refpid"
+       "=mm_26632258_3504122_32538762&clk1=248267d4a23088999b020a11a910b219&upsId=248267d4a23088999b020a11a910b219")
+
+a = ch.find_element_by_class_name("coupon-price-afterCoupon")
+print("我是输出", a.text)
+
+rest = ch.execute_script("""
+function a(){
+var coupons = $('.coupon-price-afterCoupon');  
+var  list = [];
+$(coupons).each(function() {  
+    var price = $(this).html();  
+    console.log(price);  
+    list.push(price)
+});
+return list;
+}
+a();
+""")
+print(rest)
+workbook = excel.Workbook()
+
+work = workbook.active
+
+work["A1"] = "Url"
+work["B1"] = "index"
+work["C1"] = "price"
+work["D1"] = "yy"
+count = 1
+
+for i in url:
+    print(i)
+    work["A" + str(count)] = i
+    work["B" + str(count)] = count
+    work["C" + str(count)] = count
+    work["D" + str(count)] = f"=B{str(count)}/B{str(count)}"
+    count += 1
+
+workbook.save("output.xlsx")
